@@ -11,7 +11,7 @@ public class ActorRoca extends Actor {
     public ActorRoca(Texture texturaJ){
         this.texturaJ=texturaJ;
 
-
+        setSize(texturaJ.getWidth(), texturaJ.getHeight());
     }
 
 
