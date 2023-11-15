@@ -8,7 +8,11 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
@@ -22,6 +26,8 @@ public class Box2DScreen extends BaseScreen{
 
     private Fixture fixture, sueloFixture, rocaFixture;
 
+    private boolean colisionDetected = false;
+
     public Box2DScreen(MyGdxGame game) {
         super(game);
     }
@@ -29,6 +35,23 @@ public class Box2DScreen extends BaseScreen{
     @Override
     public void render(float delta) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        if(Gdx.input.justTouched() && !colisionDetected){
+
+
+            saltar();
+//            colisionDetected = true;
+        }
+
+        float velocidadY = body.getLinearVelocity().y;
+        float velocidadX = 2;
+
+        if(colisionDetected){
+            velocidadX = 0;
+        }
+
+        body.setLinearVelocity(velocidadX, velocidadY);
+
         this.world.step(delta, 6,2);
         camera.update();
         renderer.render(world, camera.combined );
@@ -41,6 +64,37 @@ public class Box2DScreen extends BaseScreen{
         renderer=new Box2DDebugRenderer();
         camera=new OrthographicCamera(32,18);
         camera.translate(0,-2);
+
+        world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+                Fixture fixtureA = contact.getFixtureA();
+                Fixture fixtureB = contact.getFixtureB();
+
+                if(fixtureA == fixture && fixtureB == rocaFixture){
+                    colisionDetected = true;
+                }
+                if(fixtureB == fixture && fixtureA == rocaFixture){
+                    colisionDetected = true;
+                }
+            }
+
+            @Override
+            public void endContact(Contact contact) {
+
+            }
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {
+
+            }
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse impulse) {
+
+            }
+        });
+
         BodyDef bodyDef=createBody2DDef();
         body=world.createBody(bodyDef);
         PolygonShape polygonShape=new PolygonShape();
@@ -76,14 +130,14 @@ public class Box2DScreen extends BaseScreen{
 
     private BodyDef createBody2DDef(){
         BodyDef def=new BodyDef();
-        def.position.set(0,10);
+        def.position.set(-2,-4);
         def.type=BodyDef.BodyType.DynamicBody;
         return def;
     }
 
     private BodyDef createBodyRocaDef(){
         BodyDef def=new BodyDef();
-        def.position.set(0.5f,-5.5f);
+        def.position.set(4.5f,-5.5f);
         def.type=BodyDef.BodyType.StaticBody;
         return def;
     }
@@ -102,13 +156,11 @@ public class Box2DScreen extends BaseScreen{
 
     }
 
-    /*Vector2[]vertices =new Vector2[3];
-    vertices[0]=new  Vector2(-0.5f,-0.5f);
-    vertices[1]=new  Vector2(0.5f,-0.5f);
-    vertices[2]=new  Vector2(0,0.5f);
+    public void saltar(){
+        Vector2 position = body.getPosition();
+        body.applyLinearImpulse(5, 30, position.x, position.y, true);
 
-
-    shape.set(vertices);
-    */
+//        body.applyAngularImpulse(-45, true);
+    }
 
 }
