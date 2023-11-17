@@ -1,5 +1,7 @@
 package com.mygdx.game;
 
+import static entity.Constants.PIXELS2METER;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -13,6 +15,10 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import entity.Constants;
 import entity.FloorEntity;
 import entity.ObstacleEntity;
 import entity.PlayerEntity;
@@ -21,12 +27,12 @@ public class GameScreen extends BaseScreen {
     private Stage stage;
     private World world;
     private PlayerEntity player;
-    private ObstacleEntity obstaculo;
-    private FloorEntity floor;
 
-    private Integer x=10;
+    private List<FloorEntity> listaSuelos = new ArrayList<FloorEntity>();
+    private List<ObstacleEntity> listaObstaculos = new ArrayList<ObstacleEntity>();
 
-    private Integer y=30;
+//    private Integer x = 10;
+//    private Integer y = 30;
 
     private boolean colisionDetected = false;
 
@@ -45,27 +51,46 @@ public class GameScreen extends BaseScreen {
         Texture floorTexture = game.getAssetManager().get("suelo.jpg");
 
         player = new PlayerEntity(world, playerTexture, new Vector2(0, 3));
-        obstaculo = new ObstacleEntity(world, obstacleTexture, new Vector2(5, 1));
-        floor = new FloorEntity(world, floorTexture, new Vector2(0, -1));
-
-        floor.setSize(2000, 185);
-
         stage.addActor(player);
-        stage.addActor(obstaculo);
-        stage.addActor(floor);
+
+        listaSuelos.add(new FloorEntity(world, floorTexture, new Vector2(0, -1)));
+
+        for (int i = 1; i <= 15; i++){
+            listaSuelos.add(new FloorEntity(world, floorTexture, new Vector2(0, -1)));
+        }
+
+        for (int i = 1; i <= 15; i++){
+            listaObstaculos.add(new ObstacleEntity(world, obstacleTexture, new Vector2(i * 6, 1)));
+        }
+
+
+
+        for (FloorEntity floor : listaSuelos) {
+            floor.setSize(4000, 92);
+            stage.addActor(floor);
+        }
+
+        for (ObstacleEntity obstacle : listaObstaculos) {
+            stage.addActor(obstacle);
+        }
 
         world.setContactListener(new ContactListener() {
+
+            private boolean colision(Contact contact, Object userA, Object userB) {
+                return ((contact.getFixtureA().getUserData()).equals(userA) &&
+                        (contact.getFixtureB().getUserData()).equals(userB)) ||
+                        ((contact.getFixtureA().getUserData()).equals(userB) &&
+                                (contact.getFixtureB().getUserData()).equals(userA));
+            }
+
             @Override
             public void beginContact(Contact contact) {
-                Fixture fixtureA = contact.getFixtureA();
-                Fixture fixtureB = contact.getFixtureB();
+                for (ObstacleEntity obstacle : listaObstaculos) {
+                    if (colision(contact, "player", "obstaculo") || colision(contact, "obstaculo", "player")) {
+                        colisionDetected = true;
+                    }
+                }
 
-                if (fixtureA == player.getFixture() && fixtureB == obstaculo.getFixture()) {
-                    colisionDetected = true;
-                }
-                if (fixtureB == player.getFixture() && fixtureA == obstaculo.getFixture()) {
-                    colisionDetected = true;
-                }
             }
 
             @Override
@@ -83,6 +108,38 @@ public class GameScreen extends BaseScreen {
 
             }
         });
+
+//        world.setContactListener(new ContactListener() {
+//            @Override
+//            public void beginContact(Contact contact) {
+//                Fixture fixtureA = contact.getFixtureA();
+//                Fixture fixtureB = contact.getFixtureB();
+//
+//                for (ObstacleEntity obstacle : listaObstaculos) {
+//                    if (fixtureA == player.getFixture() && fixtureB == obstacle.getFixture()) {
+//                        colisionDetected = true;
+//                    }
+//                    if (fixtureB == player.getFixture() && fixtureA == obstacle.getFixture()) {
+//                        colisionDetected = true;
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void endContact(Contact contact) {
+//
+//            }
+//
+//            @Override
+//            public void preSolve(Contact contact, Manifold oldManifold) {
+//
+//            }
+//
+//            @Override
+//            public void postSolve(Contact contact, ContactImpulse impulse) {
+//
+//            }
+//        });
     }
 
     @Override
@@ -93,12 +150,17 @@ public class GameScreen extends BaseScreen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(1, 1, 0.2f, 1);
+        Gdx.gl.glClearColor(1, 1, 0.5f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        if(player.getX() > 100 && player.isAlive()){
+        stage.getCamera().translate(1.95f * delta * PIXELS2METER, 0, 0);
+        }
+
         stage.act();
 
-        if (Gdx.input.justTouched()) {
-            player.saltar(x,y);
+        if (Gdx.input.justTouched() && !colisionDetected) {
+            player.saltar();
         }
 
         float velocidadY = player.getBody().getLinearVelocity().y;
@@ -118,8 +180,7 @@ public class GameScreen extends BaseScreen {
 
         if (colisionDetected) {
             velocidadX = 0;
-            x=0;
-            y=0;
+            player.setAlive(false);
         }
 
         player.getBody().setLinearVelocity(velocidadX, velocidadY);
@@ -127,7 +188,19 @@ public class GameScreen extends BaseScreen {
 
         world.step(delta, 6, 2);
         stage.draw();
+    }
 
+    @Override
+    public void hide() {
+        player.liberar();
+        player.remove();
 
+        for (FloorEntity floor : listaSuelos) {
+            floor.liberar();
+        }
+
+        for (ObstacleEntity obstacle : listaObstaculos) {
+            obstacle.liberar();
+        }
     }
 }

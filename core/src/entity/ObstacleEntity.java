@@ -29,6 +29,7 @@ public class ObstacleEntity extends Actor {
         PolygonShape polygonShape = new PolygonShape();
         polygonShape.setAsBox(0f, 0f);
         fixture = body.createFixture(polygonShape, 1);
+        fixture.setUserData("obstaculo");
         polygonShape.dispose();
 
 //        BodyDef bodyRoca=createBody2DDef(new Vector2(-4.5f, 5.5f));
@@ -52,6 +53,11 @@ public class ObstacleEntity extends Actor {
     public void draw(Batch batch, float parentAlpha) {
         setPosition(body.getPosition().x * PIXELS2METER, body.getPosition().y * PIXELS2METER);
         batch.draw(this.texture, getX(), getY(), getWidth(), getHeight());
+    }
+
+    public void liberar(){
+        body.destroyFixture(fixture);
+        world.destroyBody(body);
     }
 
     private BodyDef createBody2DDef(Vector2 position) {

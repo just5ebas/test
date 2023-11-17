@@ -18,10 +18,12 @@ public class PlayerEntity extends Actor {
     private Body body;
     private World world;
     private Fixture fixture;
+    private boolean alive;
 
     public PlayerEntity(World world, Texture texture, Vector2 position) {
         this.world = world;
         this.texture = texture;
+        this.alive=true;
 
         BodyDef bodyDef = createBody2DDef(position);
         body = world.createBody(bodyDef);
@@ -29,6 +31,7 @@ public class PlayerEntity extends Actor {
         PolygonShape polygonShape = new PolygonShape();
         polygonShape.setAsBox(1,1);
         fixture = body.createFixture(polygonShape, 1);
+        fixture.setUserData("player");
         polygonShape.dispose();
 
         setSize(PIXELS2METER, PIXELS2METER);
@@ -47,10 +50,9 @@ public class PlayerEntity extends Actor {
         return def;
     }
 
-    public void saltar(Integer x, Integer y) {
+    public void saltar() {
         Vector2 position = body.getPosition();
-        body.applyLinearImpulse(x, y, position.x, position.y, true);
-
+        body.applyLinearImpulse(10,35 , position.x, position.y, true);
     }
 
     public Body getBody() {
@@ -59,6 +61,19 @@ public class PlayerEntity extends Actor {
 
     public Fixture getFixture() {
         return fixture;
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void setAlive(boolean alive) {
+        this.alive = alive;
+    }
+
+    public void liberar(){
+        this.body.destroyFixture(this.fixture);
+        this.world.destroyBody(this.body);
     }
 
 }

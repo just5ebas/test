@@ -30,6 +30,7 @@ public class FloorEntity extends Actor {
         PolygonShape polygonShape=new PolygonShape();
         polygonShape.setAsBox(500,1);
         fixture= body.createFixture(polygonShape,1);
+        fixture.setUserData("floor");
         polygonShape.dispose();
 
         setSize(PIXELS2METER, PIXELS2METER);
@@ -42,6 +43,11 @@ public class FloorEntity extends Actor {
 
         batch.draw(this.texture, getX(), getY(), getWidth(), getHeight());
 
+    }
+
+    public void liberar(){
+        body.destroyFixture(fixture);
+        world.destroyBody(body);
     }
 
     private BodyDef createBody2DDef(Vector2 position){
