@@ -47,9 +47,10 @@ public class PlayerEntity extends Actor {
         return def;
     }
 
-    public void saltar() {
+    public void saltar(Integer x, Integer y) {
         Vector2 position = body.getPosition();
-        body.applyLinearImpulse(10, 30, position.x, position.y, true);
+        body.applyLinearImpulse(x, y, position.x, position.y, true);
+
     }
 
     public Body getBody() {

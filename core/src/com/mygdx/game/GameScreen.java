@@ -24,6 +24,10 @@ public class GameScreen extends BaseScreen {
     private ObstacleEntity obstaculo;
     private FloorEntity floor;
 
+    private Integer x=10;
+
+    private Integer y=30;
+
     private boolean colisionDetected = false;
 
     public GameScreen(MyGdxGame game) {
@@ -41,7 +45,7 @@ public class GameScreen extends BaseScreen {
         Texture floorTexture = game.getAssetManager().get("suelo.jpg");
 
         player = new PlayerEntity(world, playerTexture, new Vector2(0, 3));
-        obstaculo = new ObstacleEntity(world, obstacleTexture, new Vector2(3, 1));
+        obstaculo = new ObstacleEntity(world, obstacleTexture, new Vector2(5, 1));
         floor = new FloorEntity(world, floorTexture, new Vector2(0, -1));
 
         floor.setSize(2000, 185);
@@ -94,7 +98,7 @@ public class GameScreen extends BaseScreen {
         stage.act();
 
         if (Gdx.input.justTouched()) {
-            player.saltar();
+            player.saltar(x,y);
         }
 
         float velocidadY = player.getBody().getLinearVelocity().y;
@@ -114,6 +118,8 @@ public class GameScreen extends BaseScreen {
 
         if (colisionDetected) {
             velocidadX = 0;
+            x=0;
+            y=0;
         }
 
         player.getBody().setLinearVelocity(velocidadX, velocidadY);
